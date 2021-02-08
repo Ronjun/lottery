@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-Br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zup Lottery</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sriracha&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="header-container">
+      <a href="home.html"> <span>⚡</span> LOTERIAS ZUP </a>
+    </header>
+    <div class="home-container">
+      <div class="title-container">
+        <h1>
+          Bem vindo às Loterias ZUP!<br />
+          Realize uma aposta ou veja as suas apostas realizadas.
+        </h1>
+      </div>
+      <div class="form-container">
+        <form onsubmit="return false">
+          <span>Email :</span>
+          <input
+            class="input-container"
+            id="username"
+            name="username"
+            placeholder="exemplo@gmail.com"
+            value=""
+            required
+          />
+          <button onclick="newBet()" class="button-container">
+            Fazer nova aposta
+          </button>
+          <button onclick="viewBets()" class="button-container">
+            Ver minhas apostas
+          </button>
+        </form>
+      </div>
+      <div id="newbet-container" class="hidden">
+        <h2 id="newbet-title"></h2>
+        <p id="newbet-id"></p>
+        <p id="newbet-numbers"></p>
+      </div>
+      <div id="results-container" class="hidden"></div>
+    </div>
+  </body>
+  <script>
+    async function newBet() {
+      let username = await document.getElementById("username").value;
+      var result;
+
+      if (validateEmail(username)) {
+        await fetch("http://localhost:8080/bets", {
+          method: "POST",
+          body: `${username}`,
+          headers: {
+            "Content-type": "text/plain",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => (result = data));
+
+        document.getElementById("results-container").className = "hidden";
+
+        document.getElementById("newbet-container").className =
+          "results-container";
+        document.getElementById(
+          "newbet-title"
+        ).innerHTML = `Apostador: ${username}`;
+        document.getElementById(
+          "newbet-id"
+        ).innerHTML = `Aposta Nº: ${result.id}`;
+        document.getElementById(
+          "newbet-numbers"
+        ).innerHTML = `Números da sorte: ${result.luckNumbers}`;
+      }
+    }
+
+    async function viewBets() {
+      let username = document.getElementById("username").value;
+      var result = [];
+
+      if (validateEmail(username)) {
+        await fetch(`http://localhost:8080/users?email=${username}`, {
+          method: "GET",
+        })
+          .then((response) => response.json())
+          .then((data) => (result = data.bets));
+
+        document.getElementById("newbet-container").className = "hidden";
+
+        for (i = 0; i < result.length; i++) {
+          var container = document.getElementById("results-container");
+          container.className = "results-container";
+
+          var title = document.createElement("h2");
+          title.innerHTML = `Apostador: ${username}`;
+          container.appendChild(title);
+
+          var betNum = document.createElement("p");
+          betNum.innerHTML = `Aposta Nº: ${result[i].id}`;
+          container.appendChild(betNum);
+
+          var luckNum = document.createElement("p");
+          luckNum.innerHTML = `Números da sorte: ${result[i].luckNumbers}`;
+          container.appendChild(luckNum);
+        }
+      }
+    }
+
+    function validateEmail(email) {
+      const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(email).toLowerCase());
+    }
+  </script>
+</html>
